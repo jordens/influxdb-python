@@ -14,6 +14,9 @@ class InfluxDBClientError(Exception):
         self.message = message
         self.code = code
 
+    def __str__(self):
+        return "InfluxDB error: code {} ({})".format(self.code,
+                self.message)
 
 class InfluxDBClient(object):
     """

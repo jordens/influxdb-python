@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from influxdb.client import InfluxDBClient
+from influxdb.client import InfluxDBClient, InfluxDBClientError
 
 
 __all__ = ['InfluxDBClient']
