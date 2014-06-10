@@ -171,22 +171,6 @@ class InfluxDBClient(object):
 
         return True
 
-    # One Time Deletes
-
-    def delete_points(self, name):
-        """
-        Delete an entire series
-        """
-        url = "db/{0}/series/{1}".format(self._database, name)
-
-        self.request(
-            url=url,
-            method='DELETE',
-            status_code=204
-            )
-
-        return True
-
     # Regularly Scheduled Deletes
 
     def create_scheduled_delete(self, json_body):
