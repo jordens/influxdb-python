@@ -129,13 +129,7 @@ class InfluxDBClient(object):
             )
             raise error
 
-    # Writing Data
-    #
-    # Assuming you have a database named foo_production you can write data
-    # by doing a POST to /db/foo_production/series?u=some_user&p=some_password
-    # with a JSON body of points.
-
-    def write_points(self, *args, **kwargs):
+    def write_points(self, data, batch_size=None, time_precision="s"):
         """
         Write to multiple time series names
 
@@ -146,48 +140,23 @@ class InfluxDBClient(object):
             Useful for when doing data dumps from one database to another or
             when doing a massive write operation
         """
+        assert time_precision in "smu"
 
-        def list_chunks(l, n):
-            """ Yield successive n-sized chunks from l.
-            """
-            for i in xrange(0, len(l), n):
-                yield l[i:i+n]
-
-        batch_size = kwargs.get('batch_size')
         if batch_size:
-            for data in kwargs.get('data'):
-                name = data.get('name')
-                columns = data.get('columns')
-                point_list = data.get('points')
-
-                for batch in list_chunks(point_list, batch_size):
-                    data = [{
-                        "points": batch,
-                        "name": name,
-                        "columns": columns
+            for dataset in data:
+                points = dataset["points"]
+                for i in xrange(0, len(points), batch_size):
+                    batch = [{
+                        "name": dataset["name"],
+                        "columns": dataset["columns"],
+                        "points": points[i:i+n],
                     }]
-                    time_precision = kwargs.get('time_precision', 's')
-                    self.write_points_with_precision(
-                        data=data,
+                    self.write_points(data=batch,
                         time_precision=time_precision)
-
-                return True
-
-        return self.write_points_with_precision(*args, **kwargs)
-
-    def write_points_with_precision(self, data, time_precision='s'):
-        """
-        Write to multiple time series names
-        """
-        if time_precision not in ['s', 'm', 'u']:
-            raise Exception(
-                "Invalid time precision is given. (use 's','m' or 'u')")
+            return
 
         url = "db/{0}/series".format(self._database)
-
-        params = {
-            'time_precision': time_precision
-        }
+        params = {"time_precision": time_precision}
 
         if self.use_udp:
             self.send_packet(data)
